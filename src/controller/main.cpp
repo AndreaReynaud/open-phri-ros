@@ -4,6 +4,8 @@
 #include <physical_quantities/units/units.h>
 
 #include "open_phri_ros/add.h"
+#include "open_phri_ros/addForceGenerator.h"
+
 //#include "open_phri_ros/remove.h"
 
 
@@ -26,7 +28,7 @@ class ServiceHandler{
         // Add constraints and generators
         while(not functions_.empty()) {
             functions_.back()(controller);
-            contraints_to_add_.pop_back(); // utilité si fonctions_?
+            //contraints_to_add_.pop_back(); // utilité si fonctions_?
         }
     }
 
@@ -69,7 +71,7 @@ private:
 /*
     bool removeConstraint(open_phri_ros::remove::Request &req, open_phri_ros::remove::Response &res){
         functions_.push_back([req](phri::SafetyController& controller){
-            controller.removeConstraint(req.name); //generaliser pour generator ?
+            controller.removeConstraint(req.name); //generaliser pour generator ? ou utiliser remove<phri::VelocityConstraint>(req.name)
         })
     }
     */
@@ -91,10 +93,9 @@ class ForceGeneratorHandler : ServiceHandler {
            bool addForceGenerator(open_phri_ros::addForceGenerator::Request &req, open_phri_ros::addForceGenerator::Response &res) {
         functions_.push_back(
             [req](phri::SafetyController& controller){
-                controller.add<phri::ForceGenerator>(req.name, scalar::Velocity(req.max_velocity));
+                controller.add<phri::ForceGenerator>(req.name, spatial::Force(req.force));
             });
         ;
-        res.stateConstraint=true;
 
         return true;
     }
@@ -108,7 +109,7 @@ int main(int argc, char* argv[]) {
     using namespace units::literals;
     ros::init(argc, argv, "open_phri/controller");
     
-    ServiceHandler service_handler;
+    // ServiceHandler service_handler;
     ConstraintHandler contraint_handler;
 
     // TODO reconfigure the controller according to possible service calls
